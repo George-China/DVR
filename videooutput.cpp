@@ -18,8 +18,7 @@ int VideoOutput::Init(void * winId)
         return -1;
     }
     win_ = SDL_CreateWindowFrom(winId);
-//    win_ = SDL_CreateWindow("player", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-//                            video_width_, video_height_, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+
     if(!win_) {
         LogError("SDL_CreateWindow failed");
         return -1;
@@ -39,8 +38,7 @@ int VideoOutput::Init(void * winId)
     yuv_buf_size_ = video_width_ * video_height_ * 1.5;
     yuv_buf_ = (uint8_t *)malloc(yuv_buf_size_);
     return 0;
-//faild:
-//    // 释放资源
+
 }
 
 int VideoOutput::Init()
@@ -49,7 +47,7 @@ int VideoOutput::Init()
         LogError("SDL_Init failed");
         return -1;
     }
-//    win_ = SDL_CreateWindowFrom(winId);
+
     win_ = SDL_CreateWindow("player", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                             video_width_, video_height_, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if(!win_) {
@@ -71,8 +69,7 @@ int VideoOutput::Init()
     yuv_buf_size_ = video_width_ * video_height_ * 1.5;
     yuv_buf_ = (uint8_t *)malloc(yuv_buf_size_);
     return 0;
-//faild:
-//    // 释放资源
+
 }
 
 
@@ -165,8 +162,7 @@ void yuvStore(AVFrame *pFrame){
     switch(pFrame->format){
         case AV_PIX_FMT_YUVJ420P:
         {
-//            sprintf(file_name,"yuv420p_%dx%d_%d-%d-%d-%d-%d-%d.yuv",
-//            pFrame->width,pFrame->height,timer->tm_year+1900,timer->tm_mon+1,timer->tm_mday,timer->tm_hour,timer->tm_min,timer->tm_sec);
+            pFrame->width,pFrame->height,timer->tm_year+1900,timer->tm_mon+1,timer->tm_mday,timer->tm_hour,timer->tm_min,timer->tm_sec);
             sprintf(file_name,"yuv420p.yuv");
             FILE *fp_yuv = fopen(file_name,"w");
             if(NULL == fp_yuv){
@@ -175,28 +171,11 @@ void yuvStore(AVFrame *pFrame){
             printf("AV_PIX_FMT_YUV420P, width = %d, height = %d\n",pFrame->width,pFrame->height);
             printf("\n------------------%d,%d,%d------------------\n",pFrame->linesize[0],pFrame->linesize[1],pFrame->linesize[2]);
 
-//            #if 0 //方法1
+
             int y_size = pFrame->width*pFrame->height;
             fwrite(pFrame->data[0],1,y_size,fp_yuv);    //Y
             fwrite(pFrame->data[1],1,y_size/4,fp_yuv);  //U
             fwrite(pFrame->data[2],1,y_size/4,fp_yuv);  //V
-//            #else //方法2
-//            for(int i=0;i<pFrame->height;i++){
-//                fwrite(pFrame->data[0],1,pFrame->width,fp_yuv);    //Y
-//                pFrame->data[0]+=pFrame->linesize[0];
-//            }
-
-//            for(int i=0;i<pFrame->height/2;i++){
-//                fwrite(pFrame->data[1],1,pFrame->width/2,fp_yuv);   //U
-//                pFrame->data[1]+=pFrame->linesize[1];
-//            }
-
-//            for(int i=0;i<pFrame->height/2;i++){
-//                fwrite(pFrame->data[2],1,pFrame->width/2,fp_yuv);   //V
-//                pFrame->data[2]+=pFrame->linesize[2];
-//            }
-//            #endif
-
             fclose(fp_yuv);
             break;
         }
@@ -215,37 +194,16 @@ void VideoOutput::videoRefresh(double *remaining_time,uint8_t * data)
     frame = frame_queue_->Front(); //获取准备要渲染的帧， 这里不出队列
     if(frame) {
         double pts = frame->pts * av_q2d(time_base_); // 视频帧的时间戳
-
-//        LogInfo("video pts:%0.3lf\n", pts);
-
         double diff = pts - avsync_->GetClock();  // 对比音频时钟， 复杂的音视频同步 ffplay B站ijkplayer
 
         if(diff > 0) {
             *remaining_time = FFMIN(*remaining_time, diff);
             return;
         }
-//        yuvStore(frame);
-
-
-
         int size = frame->width*frame->height;
         memcpy(data,frame->data[0],size);
         memcpy(data+size,frame->data[1],size/4);
         memcpy(data+size+size/4,frame->data[2],size/4);
-//        data = (uint8_t *)frame->data;
-
-//        std::cout<<"sizeof(frame->data):"<< sizeof(frame->data)<<"sizeof(data[0]):"<< sizeof(frame->data[0])<<"sizeof(data[1]):"<< sizeof(frame->data[1])<<"sizeof(data[2]):"<< sizeof(frame->data[2])<<" linesize[0]:"<<frame->linesize[0]<<" linesize[1]:"<<frame->linesize[1]<<" linesize[2]:"<<frame->linesize[2]<<std::endl;
-//        // 有就渲染
-//        rect_.x = 0;
-//        rect_.y = 0;
-//        rect_.w = video_width_;
-//        rect_.h = video_height_;
-//        SDL_UpdateYUVTexture(texture_, &rect_, frame->data[0], frame->linesize[0],
-//                frame->data[1], frame->linesize[1],
-//                frame->data[2], frame->linesize[2]);
-//        SDL_RenderClear(renderer_);
-//        SDL_RenderCopy(renderer_, texture_, NULL, &rect_);
-//        SDL_RenderPresent(renderer_);
         frame = frame_queue_->Pop(1);  // 把帧出队列
         av_frame_free(&frame);
     }
